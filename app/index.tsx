@@ -6,15 +6,20 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomText from '../components/CustomText';
+import { useCalculator } from '../src/hooks';
 
 function Boton({
   label,
+  accessibilityLabel,
+  onPress,
   compact,
   doubleWidth = false,
   light = false,
   blue = false,
 }: {
   label: string;
+  accessibilityLabel?: string;
+  onPress: () => void;
   compact: boolean;
   doubleWidth?: boolean;
   light?: boolean;
@@ -23,7 +28,8 @@ function Boton({
   return (
     <TouchableOpacity
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={accessibilityLabel ?? label}
+      onPress={onPress}
       style={[
         styles.button,
         compact && styles.compactButton,
@@ -46,38 +52,45 @@ function Boton({
 export default function CalculatorScreen() {
   const { height } = useWindowDimensions();
   const compact = height <= 700;
+  const { display, press } = useCalculator();
 
   return (
     <SafeAreaView style={[styles.screen, compact && styles.compactScreen]}>
       <View style={[styles.calculator, compact && styles.compactCalculator]}>
         <View style={[styles.display, compact && styles.compactDisplay]}>
-          <CustomText variant="big">0</CustomText>
+          <CustomText variant="big">{display}</CustomText>
         </View>
 
         <View style={[styles.keypad, compact && styles.compactKeypad]}>
-          <Boton label="C" compact={compact} light />
-          <Boton label="+/−" compact={compact} light />
-          <Boton label="%" compact={compact} light />
-          <Boton label="÷" compact={compact} blue />
+          <Boton label="AC" onPress={() => press('AC')} compact={compact} light />
+          <Boton label="+/−" onPress={() => press('±')} compact={compact} light />
+          <Boton
+            label="⌫"
+            accessibilityLabel="Borrar último dígito"
+            onPress={() => press('⌫')}
+            compact={compact}
+            light
+          />
+          <Boton label="÷" onPress={() => press('÷')} compact={compact} blue />
 
-          <Boton label="7" compact={compact} />
-          <Boton label="8" compact={compact} />
-          <Boton label="9" compact={compact} />
-          <Boton label="×" compact={compact} blue />
+          <Boton label="7" onPress={() => press('7')} compact={compact} />
+          <Boton label="8" onPress={() => press('8')} compact={compact} />
+          <Boton label="9" onPress={() => press('9')} compact={compact} />
+          <Boton label="×" onPress={() => press('×')} compact={compact} blue />
 
-          <Boton label="4" compact={compact} />
-          <Boton label="5" compact={compact} />
-          <Boton label="6" compact={compact} />
-          <Boton label="−" compact={compact} blue />
+          <Boton label="4" onPress={() => press('4')} compact={compact} />
+          <Boton label="5" onPress={() => press('5')} compact={compact} />
+          <Boton label="6" onPress={() => press('6')} compact={compact} />
+          <Boton label="−" onPress={() => press('−')} compact={compact} blue />
 
-          <Boton label="1" compact={compact} />
-          <Boton label="2" compact={compact} />
-          <Boton label="3" compact={compact} />
-          <Boton label="+" compact={compact} blue />
+          <Boton label="1" onPress={() => press('1')} compact={compact} />
+          <Boton label="2" onPress={() => press('2')} compact={compact} />
+          <Boton label="3" onPress={() => press('3')} compact={compact} />
+          <Boton label="+" onPress={() => press('+')} compact={compact} blue />
 
-          <Boton label="0" compact={compact} doubleWidth />
-          <Boton label="." compact={compact} />
-          <Boton label="=" compact={compact} blue />
+          <Boton label="0" onPress={() => press('0')} compact={compact} doubleWidth />
+          <Boton label="." onPress={() => press('.')} compact={compact} />
+          <Boton label="=" onPress={() => press('=')} compact={compact} blue />
         </View>
       </View>
     </SafeAreaView>
