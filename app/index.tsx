@@ -1,4 +1,5 @@
-import { StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { FlatList, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import CalculatorButton from '@/components/CalculatorButton';
@@ -11,10 +12,11 @@ type ButtonConfig = {
   value: CalculatorKey;
   accessibilityLabel?: string;
   doubleWidth?: boolean;
+  compact?: boolean;
   variant?: 'number' | 'utility' | 'operator';
 };
 
-const buttons: ButtonConfig[] = [
+const basicButtons: ButtonConfig[] = [
   { label: 'AC', value: 'AC', variant: 'utility' },
   { label: '+/−', value: '±', variant: 'utility' },
   {
@@ -41,12 +43,104 @@ const buttons: ButtonConfig[] = [
   { label: '=', value: '=', variant: 'operator' },
 ];
 
+const scientificButtons: ButtonConfig[] = [
+  { label: '(', value: '(', compact: true, variant: 'utility' },
+  { label: ')', value: ')', compact: true, variant: 'utility' },
+  { label: 'sin', value: 'sin', compact: true, variant: 'operator' },
+  { label: 'cos', value: 'cos', compact: true, variant: 'operator' },
+  { label: 'tan', value: 'tan', compact: true, variant: 'operator' },
+  { label: 'xʸ', value: '^', compact: true, variant: 'operator' },
+  { label: '√', value: 'sqrt', compact: true, variant: 'operator' },
+  { label: 'x²', value: 'square', compact: true, variant: 'operator' },
+  { label: 'log', value: 'log', compact: true, variant: 'operator' },
+  { label: 'ln', value: 'ln', compact: true, variant: 'operator' },
+  { label: '1/x', value: 'reciprocal', compact: true, variant: 'operator' },
+  { label: '10ˣ', value: 'powerOfTen', compact: true, variant: 'operator' },
+  { label: 'π', value: 'pi', compact: true, variant: 'operator' },
+  { label: 'e', value: 'e', compact: true, variant: 'operator' },
+];
+
 export default function CalculatorScreen() {
-  const { display, press } = useCalculator();
+  const {
+    display,
+    expression,
+    history,
+    press,
+    useDegrees,
+    toggleAngleMode,
+    clearHistory,
+    restoreHistoryItem,
+  } = useCalculator();
+  const [scientificMode, setScientificMode] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const { height } = useWindowDimensions();
+  const keyHeight = Math.round(Math.max(44, Math.min(56, (height - 280) / 8)));
 
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.calculator}>
+        <View style={styles.toolbar}>
+          {scientificMode && !historyOpen && (
+            <CalculatorButton
+              label={useDegrees ? 'DEG' : 'RAD'}
+              accessibilityLabel={`Cambiar a ${useDegrees ? 'radianes' : 'grados'}`}
+              compact
+              toolbar
+              variant="utility"
+              onPress={toggleAngleMode}
+            />
+          )}
+          <CalculatorButton
+            label={
+              historyOpen
+                ? 'Calculadora'
+                : scientificMode
+                  ? 'BÁSICA'
+                  : 'Científica'
+            }
+            accessibilityLabel={
+              historyOpen
+                ? 'Volver a la calculadora'
+                : scientificMode
+                  ? 'Mostrar calculadora básica'
+                  : 'Mostrar calculadora científica'
+            }
+            compact
+            toolbar
+            variant="utility"
+            onPress={() => {
+              if (historyOpen) {
+                setHistoryOpen(false);
+              } else {
+                setScientificMode((current) => !current);
+              }
+            }}
+          />
+          <CalculatorButton
+            label={historyOpen ? 'Borrar' : `Historial ${history.length}`}
+            accessibilityLabel={historyOpen ? 'Borrar historial' : 'Abrir historial'}
+            compact
+            toolbar
+            variant="utility"
+            onPress={() => {
+              if (historyOpen) {
+                clearHistory();
+              } else {
+                setHistoryOpen(true);
+              }
+            }}
+          />
+        </View>
+        <View style={styles.expression}>
+          <CustomText
+            variant="small"
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            accessibilityLabel={`Expresión: ${expression || 'vacía'}`}
+          >
+            {expression}
+          </CustomText>
+        </View>
         <View
           accessibilityRole="text"
           accessibilityLabel={`Resultado: ${display}`}
@@ -55,18 +149,67 @@ export default function CalculatorScreen() {
           <CustomText variant="big">{display}</CustomText>
         </View>
 
-        <View style={styles.keypad}>
-          {buttons.map((button) => (
-            <CalculatorButton
-              key={button.value}
-              label={button.label}
-              accessibilityLabel={button.accessibilityLabel}
-              doubleWidth={button.doubleWidth}
-              variant={button.variant}
-              onPress={() => press(button.value)}
-            />
-          ))}
-        </View>
+        {historyOpen ? (
+          <View style={styles.historyPanel}>
+            {history.length === 0 ? (
+              <CustomText variant="small" style={styles.emptyHistory}>
+                Todavía no hay operaciones
+              </CustomText>
+            ) : (
+              <FlatList
+                data={history}
+                keyExtractor={(item) => String(item.id)}
+                style={styles.historyList}
+                contentContainerStyle={styles.historyContent}
+                renderItem={({ item }) => (
+                  <CalculatorButton
+                    label={`${item.expression} = ${item.result}`}
+                    accessibilityLabel={`${item.expression} igual a ${item.result}. Tocar para reutilizar`}
+                    historyItem
+                    variant="number"
+                    onPress={() => {
+                      restoreHistoryItem(item);
+                      setHistoryOpen(false);
+                    }}
+                  />
+                )}
+              />
+            )}
+          </View>
+        ) : (
+          <>
+            {scientificMode && (
+              <View style={styles.scientificKeypad}>
+                {scientificButtons.map((button) => (
+                  <CalculatorButton
+                    key={button.value}
+                    label={button.label}
+                    accessibilityLabel={button.accessibilityLabel}
+                    compact={button.compact}
+                    keyHeight={keyHeight}
+                    variant={button.variant}
+                    onPress={() => press(button.value)}
+                  />
+                ))}
+              </View>
+            )}
+
+            <View style={styles.keypad}>
+              {basicButtons.map((button) => (
+                <CalculatorButton
+                  key={button.value}
+                  label={button.label}
+                  accessibilityLabel={button.accessibilityLabel}
+                  doubleWidth={button.doubleWidth}
+                  dense={scientificMode}
+                  keyHeight={keyHeight}
+                  variant={button.variant}
+                  onPress={() => press(button.value)}
+                />
+              ))}
+            </View>
+          </>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -83,21 +226,59 @@ const styles = StyleSheet.create({
     maxWidth: 460,
     alignSelf: 'center',
     paddingHorizontal: 18,
-    paddingBottom: 12,
+    paddingTop: 20,
+    paddingBottom: 4,
+  },
+  toolbar: {
+    minHeight: 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 6,
   },
   display: {
-    flex: 1,
-    minHeight: 120,
+    height: 88,
+    minHeight: 88,
     alignItems: 'flex-end',
     justifyContent: 'flex-end',
     paddingHorizontal: 8,
-    paddingBottom: 22,
+    paddingBottom: 8,
+  },
+  expression: {
+    height: 20,
+    justifyContent: 'flex-end',
+    paddingHorizontal: 8,
+  },
+  historyPanel: {
+    flex: 1,
+    minHeight: 0,
+    paddingTop: 8,
+    paddingBottom: 12,
+  },
+  historyList: {
+    flex: 1,
+  },
+  historyContent: {
+    gap: 8,
+    paddingBottom: 8,
+  },
+  emptyHistory: {
+    textAlign: 'center',
+    paddingTop: 24,
   },
   keypad: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 12,
+    gap: 4,
+  },
+  scientificKeypad: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 4,
+    marginBottom: 6,
   },
 });

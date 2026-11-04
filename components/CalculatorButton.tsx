@@ -11,6 +11,11 @@ type CalculatorButtonProps = {
   onPress: () => void;
   accessibilityLabel?: string;
   doubleWidth?: boolean;
+  compact?: boolean;
+  dense?: boolean;
+  keyHeight?: number;
+  toolbar?: boolean;
+  historyItem?: boolean;
   variant?: CalculatorButtonVariant;
 };
 
@@ -19,6 +24,11 @@ export default function CalculatorButton({
   onPress,
   accessibilityLabel,
   doubleWidth = false,
+  compact = false,
+  dense = false,
+  keyHeight = 44,
+  toolbar = false,
+  historyItem = false,
   variant = 'number',
 }: CalculatorButtonProps) {
   function handlePress() {
@@ -34,6 +44,12 @@ export default function CalculatorButton({
       style={({ pressed }) => [
         styles.button,
         doubleWidth && styles.doubleWidth,
+        compact && styles.compactButton,
+        dense && !doubleWidth && styles.denseButton,
+        dense && doubleWidth && styles.denseDoubleWidth,
+        !toolbar && (compact || dense) && { height: keyHeight },
+        toolbar && styles.toolbarButton,
+        historyItem && styles.historyItemButton,
         variant === 'utility' && styles.utilityButton,
         variant === 'operator' && styles.operatorButton,
         pressed && styles.pressed,
@@ -41,7 +57,13 @@ export default function CalculatorButton({
     >
       <CustomText
         variant="button"
-        style={variant === 'utility' ? styles.darkText : undefined}
+        numberOfLines={historyItem ? 1 : undefined}
+        adjustsFontSizeToFit={historyItem}
+        style={[
+          variant === 'utility' && styles.darkText,
+          compact && styles.compactText,
+          historyItem && styles.historyItemText,
+        ]}
       >
         {label}
       </CustomText>
@@ -65,6 +87,38 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     paddingLeft: 26,
   },
+  compactButton: {
+    flexBasis: '18.4%',
+    flexGrow: 0,
+    width: '18.4%',
+    aspectRatio: undefined,
+    borderRadius: 24,
+  },
+  denseButton: {
+    flexBasis: '22%',
+    flexGrow: 0,
+    aspectRatio: undefined,
+  },
+  denseDoubleWidth: {
+    aspectRatio: undefined,
+  },
+  toolbarButton: {
+    flexBasis: 'auto',
+    flexGrow: 0,
+    aspectRatio: undefined,
+    height: 44,
+    minWidth: 78,
+  },
+  historyItemButton: {
+    flexBasis: '100%',
+    flexGrow: 0,
+    aspectRatio: undefined,
+    width: '100%',
+    height: 48,
+    minWidth: 0,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+  },
   utilityButton: {
     backgroundColor: CalculatorColors.utilityKey,
   },
@@ -77,5 +131,11 @@ const styles = StyleSheet.create({
   },
   darkText: {
     color: CalculatorColors.darkText,
+  },
+  compactText: {
+    fontSize: 16,
+  },
+  historyItemText: {
+    fontSize: 17,
   },
 });
