@@ -1,4 +1,5 @@
 import { createElement } from 'react';
+import { NavigationBar } from 'expo-navigation-bar';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Platform, StyleSheet } from 'react-native';
@@ -27,7 +28,10 @@ function WebStylesheet() {
 export default function RootLayout() {
   return (
     <>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
+      {Platform.OS === 'android' && (
+        <NavigationBar style="dark" hidden={false} />
+      )}
       <WebStylesheet />
       <Stack screenOptions={{ headerShown: false }} />
     </>

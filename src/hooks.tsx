@@ -1,23 +1,39 @@
 import { useState } from 'react';
 
+type Digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';
 type Operator = '+' | '−' | '×' | '÷';
+
+export type CalculatorKey = Digit | Operator | 'AC' | '⌫' | '±' | '.' | '=';
+
+const MAX_ENTRY_DIGITS = 12;
 
 type LastOperation = {
   operator: Operator;
   operand: number;
 };
 
-function calculate(left: number, operator: Operator, right: number) {
+function calculate(left: number, operator: Operator, right: number): number | null {
+  let result: number;
+
   switch (operator) {
     case '+':
-      return left + right;
+      result = left + right;
+      break;
     case '−':
-      return left - right;
+      result = left - right;
+      break;
     case '×':
-      return left * right;
+      result = left * right;
+      break;
     case '÷':
-      return right === 0 ? null : left / right;
+      if (right === 0) {
+        return null;
+      }
+      result = left / right;
+      break;
   }
+
+  return Number.isFinite(result) ? result : null;
 }
 
 function formatNumber(value: number) {
@@ -48,7 +64,7 @@ export function useCalculator() {
     setLastOperation(null);
   }
 
-  function enterDigit(digit: string) {
+  function enterDigit(digit: Digit) {
     if (display === 'Error' || replaceEntry) {
       setDisplay(digit);
       setReplaceEntry(false);
@@ -56,6 +72,10 @@ export function useCalculator() {
     }
 
     setDisplay((current) => {
+      const digitCount = current.replace(/[-.]/g, '').length;
+      if (digitCount >= MAX_ENTRY_DIGITS) {
+        return current;
+      }
       if (current === '0') {
         return digit;
       }
@@ -163,9 +183,9 @@ export function useCalculator() {
     setDisplay((current) => current.startsWith('-') ? current.slice(1) : `-${current}`);
   }
 
-  function press(key: string) {
+  function press(key: CalculatorKey) {
     if (/^\d$/.test(key)) {
-      enterDigit(key);
+      enterDigit(key as Digit);
     } else if (key === '.') {
       enterDecimal();
     } else if (key === 'AC') {

@@ -1,96 +1,71 @@
-import {
-  StyleSheet,
-  TouchableOpacity,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import CustomText from '../components/CustomText';
-import { useCalculator } from '../src/hooks';
 
-function Boton({
-  label,
-  accessibilityLabel,
-  onPress,
-  compact,
-  doubleWidth = false,
-  light = false,
-  blue = false,
-}: {
+import CalculatorButton from '@/components/CalculatorButton';
+import CustomText from '@/components/CustomText';
+import { CalculatorColors } from '@/constants/Colors';
+import { type CalculatorKey, useCalculator } from '@/src/hooks';
+
+type ButtonConfig = {
   label: string;
+  value: CalculatorKey;
   accessibilityLabel?: string;
-  onPress: () => void;
-  compact: boolean;
   doubleWidth?: boolean;
-  light?: boolean;
-  blue?: boolean;
-}) {
-  return (
-    <TouchableOpacity
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel ?? label}
-      onPress={onPress}
-      style={[
-        styles.button,
-        compact && styles.compactButton,
-        doubleWidth && styles.doubleWidthButton,
-        compact && doubleWidth && styles.compactDoubleWidthButton,
-        light && styles.lightButton,
-        blue && styles.blueButton,
-      ]}
-    >
-      <CustomText
-        variant="button"
-        style={light ? styles.darkButtonText : undefined}
-      >
-        {label}
-      </CustomText>
-    </TouchableOpacity>
-  );
-}
+  variant?: 'number' | 'utility' | 'operator';
+};
+
+const buttons: ButtonConfig[] = [
+  { label: 'AC', value: 'AC', variant: 'utility' },
+  { label: '+/−', value: '±', variant: 'utility' },
+  {
+    label: '⌫',
+    value: '⌫',
+    accessibilityLabel: 'Borrar último dígito',
+    variant: 'utility',
+  },
+  { label: '÷', value: '÷', variant: 'operator' },
+  { label: '7', value: '7' },
+  { label: '8', value: '8' },
+  { label: '9', value: '9' },
+  { label: '×', value: '×', variant: 'operator' },
+  { label: '4', value: '4' },
+  { label: '5', value: '5' },
+  { label: '6', value: '6' },
+  { label: '−', value: '−', variant: 'operator' },
+  { label: '1', value: '1' },
+  { label: '2', value: '2' },
+  { label: '3', value: '3' },
+  { label: '+', value: '+', variant: 'operator' },
+  { label: '0', value: '0', doubleWidth: true },
+  { label: '.', value: '.' },
+  { label: '=', value: '=', variant: 'operator' },
+];
 
 export default function CalculatorScreen() {
-  const { height } = useWindowDimensions();
-  const compact = height <= 700;
   const { display, press } = useCalculator();
 
   return (
-    <SafeAreaView style={[styles.screen, compact && styles.compactScreen]}>
-      <View style={[styles.calculator, compact && styles.compactCalculator]}>
-        <View style={[styles.display, compact && styles.compactDisplay]}>
+    <SafeAreaView style={styles.screen}>
+      <View style={styles.calculator}>
+        <View
+          accessibilityRole="text"
+          accessibilityLabel={`Resultado: ${display}`}
+          style={styles.display}
+        >
           <CustomText variant="big">{display}</CustomText>
         </View>
 
-        <View style={[styles.keypad, compact && styles.compactKeypad]}>
-          <Boton label="AC" onPress={() => press('AC')} compact={compact} light />
-          <Boton label="+/−" onPress={() => press('±')} compact={compact} light />
-          <Boton
-            label="⌫"
-            accessibilityLabel="Borrar último dígito"
-            onPress={() => press('⌫')}
-            compact={compact}
-            light
-          />
-          <Boton label="÷" onPress={() => press('÷')} compact={compact} blue />
-
-          <Boton label="7" onPress={() => press('7')} compact={compact} />
-          <Boton label="8" onPress={() => press('8')} compact={compact} />
-          <Boton label="9" onPress={() => press('9')} compact={compact} />
-          <Boton label="×" onPress={() => press('×')} compact={compact} blue />
-
-          <Boton label="4" onPress={() => press('4')} compact={compact} />
-          <Boton label="5" onPress={() => press('5')} compact={compact} />
-          <Boton label="6" onPress={() => press('6')} compact={compact} />
-          <Boton label="−" onPress={() => press('−')} compact={compact} blue />
-
-          <Boton label="1" onPress={() => press('1')} compact={compact} />
-          <Boton label="2" onPress={() => press('2')} compact={compact} />
-          <Boton label="3" onPress={() => press('3')} compact={compact} />
-          <Boton label="+" onPress={() => press('+')} compact={compact} blue />
-
-          <Boton label="0" onPress={() => press('0')} compact={compact} doubleWidth />
-          <Boton label="." onPress={() => press('.')} compact={compact} />
-          <Boton label="=" onPress={() => press('=')} compact={compact} blue />
+        <View style={styles.keypad}>
+          {buttons.map((button) => (
+            <CalculatorButton
+              key={button.value}
+              label={button.label}
+              accessibilityLabel={button.accessibilityLabel}
+              doubleWidth={button.doubleWidth}
+              variant={button.variant}
+              onPress={() => press(button.value)}
+            />
+          ))}
         </View>
       </View>
     </SafeAreaView>
@@ -100,75 +75,29 @@ export default function CalculatorScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#17212B',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  compactScreen: {
-    paddingTop: 8,
-    paddingBottom: 4,
+    backgroundColor: CalculatorColors.background,
   },
   calculator: {
     flex: 1,
-    padding: 16,
-  },
-  compactCalculator: {
-    padding: 8,
+    width: '100%',
+    maxWidth: 460,
+    alignSelf: 'center',
+    paddingHorizontal: 18,
+    paddingBottom: 12,
   },
   display: {
     flex: 1,
+    minHeight: 120,
     alignItems: 'flex-end',
     justifyContent: 'flex-end',
-    paddingBottom: 24,
-  },
-  compactDisplay: {
-    flex: 1,
-    paddingBottom: 12,
+    paddingHorizontal: 8,
+    paddingBottom: 22,
   },
   keypad: {
-    flex: 1,
     flexDirection: 'row',
     flexWrap: 'wrap',
-    alignContent: 'flex-start',
-    justifyContent: 'center',
-    columnGap: 24,
-    rowGap: 24,
-  },
-  compactKeypad: {
-    flex: 1.55,
-    columnGap: 12,
-    rowGap: 12,
-  },
-  button: {
-    width: 64,
-    height: 64,
     alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 32,
-    backgroundColor: '#263440',
-  },
-  doubleWidthButton: {
-    width: 152,
-    alignItems: 'flex-start',
-    paddingLeft: 24,
-  },
-  compactButton: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-  },
-  compactDoubleWidthButton: {
-    width: 128,
-    paddingLeft: 20,
-  },
-  lightButton: {
-    backgroundColor: '#A5ADB5',
-  },
-  blueButton: {
-    backgroundColor: '#517697',
-  },
-  darkButtonText: {
-    color: '#17212B',
+    justifyContent: 'space-between',
+    gap: 12,
   },
 });

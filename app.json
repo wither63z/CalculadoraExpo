@@ -34,6 +34,14 @@
           "backgroundColor": "#ffffff"
         }
       ],
+      [
+        "expo-navigation-bar",
+        {
+          "enforceContrast": false,
+          "hidden": false,
+          "style": "light"
+        }
+      ],
       "expo-status-bar",
       "expo-font",
       "expo-web-browser"
