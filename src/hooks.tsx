@@ -34,6 +34,7 @@ export type CalculatorHistoryItem = {
 };
 
 const MAX_ENTRY_DIGITS = 12;
+// El tokenizador acepta únicamente símbolos conocidos; no ejecuta código dinámico.
 const TOKEN_PATTERN =
   /(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?|powerOfTen|reciprocal|square|sqrt|sin|cos|tan|log|ln|π|e|[()+−×÷^]/g;
 
@@ -126,13 +127,17 @@ function applyFunction(name: string, value: number, useDegrees: boolean): number
   return Number.isFinite(result) ? result : null;
 }
 
-function evaluateExpression(expression: string, useDegrees: boolean): number | null {
+export function evaluateExpression(
+  expression: string,
+  useDegrees: boolean,
+): number | null {
   const compact = expression.replace(/\s/g, '');
   const tokens = compact.match(TOKEN_PATTERN) ?? [];
   if (!compact || tokens.join('') !== compact) {
     return null;
   }
 
+  // Parser descendente: cada función representa un nivel de precedencia.
   let position = 0;
   const current = () => tokens[position];
 
@@ -325,6 +330,7 @@ function getLastOperation(
 }
 
 export function useCalculator() {
+  // Cada llamada al hook crea su propio estado; no hay variables globales compartidas.
   const [display, setDisplay] = useState('0');
   const [expressionLabel, setExpressionLabel] = useState('');
   const [useDegrees, setUseDegrees] = useState(true);

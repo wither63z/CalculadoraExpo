@@ -25,9 +25,11 @@
   },
   "devDependencies": {
     "@expo/ngrok": "^4.1.3",
+    "@types/node": "^26.6.6",
     "@types/react": "~19.3.0",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~58.0.4",
+    "tsx": "^4.23.15",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -35,7 +37,9 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "test": "tsx tests/calculator-engine.test.ts",
+    "check": "npm run lint && tsc --noEmit && npm run test"
   },
   "private": true
 }
