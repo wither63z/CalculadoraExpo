@@ -40,6 +40,7 @@ export default function CalculatorButton({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
+      hitSlop={4}
       onPress={handlePress}
       style={({ pressed }) => [
         styles.button,

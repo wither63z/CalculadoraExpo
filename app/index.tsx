@@ -74,7 +74,8 @@ export default function CalculatorScreen() {
   const [scientificMode, setScientificMode] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const { height } = useWindowDimensions();
-  const keyHeight = Math.round(Math.max(44, Math.min(56, (height - 280) / 8)));
+  // Ocho filas en modo científico: reduce las teclas solo en teléfonos bajos.
+  const keyHeight = Math.round(Math.max(38, Math.min(56, (height - 280) / 8)));
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -232,6 +233,7 @@ const styles = StyleSheet.create({
   toolbar: {
     minHeight: 40,
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'flex-end',
     gap: 6,
